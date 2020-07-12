@@ -1,0 +1,26 @@
+{
+  "name": "major_tom_gateway_api",
+  "version": "0.0.1",
+  "description": "NodeJS API for Major Tom",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "NodeJS",
+    "Major",
+    "Tom",
+    "Gateway",
+    "API"
+  ],
+  "author": "Dmitry White",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.88.2",
+    "ws": "^7.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "prettier": "^2.0.5"
+  }
+}
