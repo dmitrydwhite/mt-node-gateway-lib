@@ -1,4 +1,4 @@
-const { ONE_SECOND } = require("./constants");
+const { ONE_SECOND } = require("../constants");
 
 /**
  * A light wrapper around a passed WebSocket implementation that allows

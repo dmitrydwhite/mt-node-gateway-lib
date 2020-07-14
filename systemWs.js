@@ -33,7 +33,7 @@ class ConfigurableTransform extends Transform {
  * @param {Boolean} [useInsecure] Set to true if the WebSocket server should be over ws instead of wss
  * @param {Number} port The port where the WebSocket server should run
  */
-const newSystemWs = opts => {
+const newSystemWS = opts => {
   // Consume all the configuration options
   const conf = opts || {};
   const secure = !conf.useInsecure;
@@ -168,7 +168,7 @@ const newSystemWs = opts => {
         addressObj.connection.send(data);
       } else {
         addressObj.outbound.pause();
-        addressObj.outbound.unshift();
+        addressObj.outbound.unshift(data);
       }
     });
 
@@ -370,8 +370,8 @@ const newSystemWs = opts => {
 */
 class SystemWS {
   constructor(opts) {
-    return newSystemWs(opts);
+    return newSystemWS(opts);
   }
 }
 
-module.exports = { newSystemWs, SystemWS };
+module.exports = { newSystemWS, SystemWS };
