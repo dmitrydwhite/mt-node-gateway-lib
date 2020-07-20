@@ -189,7 +189,7 @@ const newSystemWS = opts => {
     const destinations = Object.keys(addresses);
 
     if (destinations.length === 0) {
-      return new Error('You must register a system in order to send');
+      throw new Error('You must register a system in order to send');
     }
 
     if (!system && destinations.length === 1) {
@@ -198,17 +198,17 @@ const newSystemWS = opts => {
     }
 
     if (!system) {
-      return new Error(
+      throw new Error(
         'You must provide the system name in order to send; or use sendAll if you want to send to all systems'
       );
     }
 
-    const destinationSystem = addresses[systems[system]];
+    const destinationSystem = addresses[system];
 
     if (destinationSystem) {
       destinationSystem.outbound.write(data);
     } else {
-      return new Error('You are attempting to send data to a system that has not been registered');
+      throw new Error('You are attempting to send data to a system that has not been registered');
     }
   };
 
@@ -231,7 +231,7 @@ const newSystemWS = opts => {
 
   const wrap = (newWrapFn, overWriteCustom) => {
     if (typeof newWrapFn !== 'function') {
-      return new Error('You must provide a function to method wrap');
+      throw new Error('You must provide a function to method wrap');
     }
 
     wrapFn = newWrapFn;
@@ -257,7 +257,7 @@ const newSystemWS = opts => {
 
   const unwrap = (newUnwrapFn, overWriteCustom) => {
     if (typeof newUnwrapFn !== 'function') {
-      return new Error('You must provide a function to method wrap');
+      throw new Error('You must provide a function to method wrap');
     }
 
     unwrapFn = newUnwrapFn;
@@ -307,13 +307,13 @@ const newSystemWS = opts => {
    */
   const onmessage = cb => {
     if (typeof cb !== 'function') {
-      return new Error('Provide a function to the onmessage handler');
+      throw new Error('Provide a function to the onmessage handler');
     }
 
     messageCb = cb;
 
     if (receiveStreamOpen) {
-      return new Error(
+      throw new Error(
         'A message handler was provided while a receive stream was open; to use the handler function, close the receive stream'
       )
     } else {
@@ -327,7 +327,7 @@ const newSystemWS = opts => {
 
   const oncxerror = cb => {
     if (typeof cb !== 'function') {
-      return new Error('Provide a function to the connection error handler');
+      throw new Error('Provide a function to the connection error handler');
     }
 
     serverErrorCb = cb;

@@ -144,7 +144,9 @@ const newGatewayManager = ({
     commandQueuer.addSystem(systemName);
   };
 
-  const connectToMajorTom = () => { majorTom.connect(); };
+  const connectToMajorTom = () => {
+    majorTom.connect();
+  };
 
   const validateCommand = (cmdType, callback) => {
     if (typeof cmdType === 'string') {
@@ -253,8 +255,9 @@ const newGatewayManager = ({
         .allActives()
         .find(channel => channel.getRegisteredSystems().includes(system));
 
+      console.log(destination);
       majorTom.transmitCommandUpdate(data.id, 'uplinking_to_system', data);
-      destination.send(data);
+      destination.send(data, system);
     },
     acked_by_system: data => {
       majorTom.transmitCommandUpdate(data.id, 'acked_by_system', data);

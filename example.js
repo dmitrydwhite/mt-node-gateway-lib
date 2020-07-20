@@ -1,7 +1,4 @@
-const { PassThrough } = require('stream');
 const manager = require('./gatewayManager');
-
-const receiveStream = new PassThrough();
 
 const myManager = manager({
   host: 'app.majortom.cloud',
@@ -9,36 +6,14 @@ const myManager = manager({
 });
 
 myManager.addChannel('websocket', { useInsecure: true });
-myManager.translateOutboundFor('websocket', JSON.stringify);
-// myManager.translateInboundFor('websocket', (json, system) => {
-//   const asObj = typeof json === 'string' ? JSON.parse(json) : json;
-//   const { command } = asObj;
-//   let commandObj;
+myManager.translateOutboundFor('websocket', command => {
+  const { id, type, fields } = command;
 
-//   if (command) {
-//     commandObj = { system, ...command };
+  return `ID:${id}/TYPE:${type.toUpperCase()}/${fields.map(({ name, value }) => `${name.toUpperCase()}:${value}/`)}`;
+});
 
-//     return JSON.stringify({ ...asObj, command: commandObj });
-//   }
-
-//   return JSON.stringify(asObj);
-// });
-
-myManager.addSystem('DirectionalLaser', 'websocket');
-
-myManager.validateCommand(command => {
-  const { type, fields } = command;
-
-  switch (type) {
-    case 'engage_laser':
-      const [field] = fields;
-
-      if (field.value > 1) {
-        return new Error('Setting for Engage Power must be 0 or 1');
-      }
-    default:
-      return true;
-  }
+['loadDriver', 'happenator', 'hapticProcessor'].forEach(sys => {
+  myManager.addSystem(sys, 'websocket');
 });
 
 myManager.connectToMajorTom();
