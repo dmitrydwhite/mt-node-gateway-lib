@@ -255,7 +255,6 @@ const newGatewayManager = ({
         .allActives()
         .find(channel => channel.getRegisteredSystems().includes(system));
 
-      console.log(destination);
       majorTom.transmitCommandUpdate(data.id, 'uplinking_to_system', data);
       destination.send(data, system);
     },

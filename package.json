@@ -22,9 +22,5 @@
     "express": "^4.17.1",
     "request": "^2.88.2",
     "ws": "^7.3.0"
-  },
-  "devDependencies": {
-    "eslint": "^7.4.0",
-    "prettier": "^2.0.5"
   }
 }

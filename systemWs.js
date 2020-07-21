@@ -85,6 +85,7 @@ const newSystemWS = opts => {
         // Destroy the socket
         socket.destroy();
         // TODO: this may not be the best way to inform anyone that we've got an unexpected connection attempt.
+        console.log('We received a connection request over WebSocket that could not be verified');
         throw destinationString;
       }
 
@@ -136,18 +137,20 @@ const newSystemWS = opts => {
       }
     });
 
-    httpServer.listen(port, host || '127.0.0.1');
+    httpServer.listen(port, host || '127.0.0.1', () => {
+      console.log(`WebSocket Channel Open at ${host || '127.0.0.1'}:${port}`);
+    });
   };
 
   const registerSystem = (systemName, destination, customWrapper, customUnwrapper) => {
     const destinationString = systemName || destination;
 
     if (typeof destinationString !== 'string') {
-      return new Error('System name must be a string');
+      throw new Error('System name must be a string');
     }
 
     if (addresses[destinationString]) {
-      return new Error(
+      throw new Error(
         `The system at ${destinationString} has already been registered; unregister it and try again`
       );
     }
@@ -366,7 +369,7 @@ const newSystemWS = opts => {
 };
 
 /**
-* Create a System UDP Channel using class syntax
+* Create a System WebSocket Channel using class syntax
 */
 class SystemWS {
   constructor(opts) {
