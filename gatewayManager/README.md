@@ -42,6 +42,12 @@ Informs the gateway manager to expect a system to be added over the specified ch
 require more specific pathing information to reach the system, e.g. a host and ip combination. See
 the channel docs under `registerSystem` for details on the destination string for each channel.
 
+#### `manager.sendCommandDefinitions(commandDefinitions)`
+* `commandDefinitions` `<String|Object>` Either a JSON string or an object with a `system` and `definitions` field
+
+Sends command definitions directly to Major Tom for the system indicated in the passed data. See
+Major Tom system docs for details on how command definitions should be formatted.
+
 #### `manager.attachListener(state, callback)`
 * `state` `<String>` The gateway state to run the provided callback against
 * `callback` `<Function>` The callback to run when the passed command state is emitted

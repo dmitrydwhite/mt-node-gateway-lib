@@ -1,5 +1,5 @@
 const { newNodeGateway } = require('./gatewayAPI');
-const { newGatewayManager } = require('./gatewayManager');
+const newGatewayManager = require('./gatewayManager');
 
 module.exports = {
   newNodeGateway,

@@ -133,6 +133,7 @@ const newNodeGateway = ({
   };
 
   const transmitMetrics = metrics => {
+    console.log('got some metrics', metrics);
     const measurements = {
       type: 'measurements',
       measurements: metrics.map(({
@@ -171,7 +172,7 @@ const newNodeGateway = ({
         command_id,
         debug,
         system,
-        message,
+        message: message || 'No message description received at gateway',
         level: level || 'nominal',
         timestamp: timestamp || Date.now(),
         type: type || 'Gateway Event',
@@ -215,7 +216,7 @@ const newNodeGateway = ({
   const handleMessage = message => {
     const { type } = message;
 
-    manageOutbound(type);
+    manageIncomingErrorOrHello(type);
 
     if (messageHandlers[type]) {
       return messageHandlers[type](message);
@@ -224,27 +225,23 @@ const newNodeGateway = ({
     log(`Got unknown message type from Major Tom: ${message}`);
   };
 
-  const manageOutbound = type => {
+  const manageIncomingErrorOrHello = type => {
     if (type === 'error') {
       waiting = true;
       majorTomOutbound.pause();
-      // majorTomOutbound.removeListener('data', sendToMt);
     }
 
     if (type === 'hello' && waiting) {
-      let outbound;
-
       waiting = false;
-      // majorTomOutbound.on('data', sendToMt);
       if (majorTomOutbound.isPaused()) {
         majorTomOutbound.resume();
       }
 
-      startMtObStr();
+      startMajorTomOutboundStream();
     }
   };
 
-  const startMtObStr = () => {
+  const startMajorTomOutboundStream = () => {
     majorTomOutbound.on('data', data => {
       majortom.send(data);
     })
@@ -315,11 +312,17 @@ const newNodeGateway = ({
     cancel: cancelHandler,
   };
 
+  const pipeFromMajorTom = () => fromMajorTom;
+
+  const pipeToMajorTom = () => majorTomOutbound;
+
   return {
     connect,
     cancelCommand,
     completeCommand,
     failCommand,
+    pipeFromMajorTom,
+    pipeToMajorTom,
     transmit,
     transmitCommandUpdate,
     transmitEvents,

@@ -1,26 +1,8 @@
 const dgram = require('dgram');
 const process = require('process');
-const { Transform } = require('stream');
+const ConfigurableTransform = require('./ConfigurableTransform');
 
 const udpVersions = { udp4: true, udp6: true };
-
-const createTransformOpts = (func, system) => ({
-  system,
-  objectMode: true,
-  transform: function(data, _, cb) {
-    try {
-      const transformed = func(data, this.system);
-
-      if (transformed instanceof Error) {
-        throw transformed;
-      } else {
-        cb(null, transformed);
-      }
-    } catch (err) {
-      cb(err);
-    }
-  }
-});
 
 const parseDestination = str => {
   const asNumber = Number(str);
@@ -30,19 +12,10 @@ const parseDestination = str => {
   }
 
   const hasProtocol = str.indexOf('://') >= 4;
-  const { hostname, port } = new URL(`${hasProtocol ? '' : 'http://'}${str}`);
+  const { hostname, port } = new URL(`${hasProtocol ? '' : 'https://'}${str}`);
 
   return [hostname, port];
 };
-
-class ConfigurableTransform extends Transform {
-  constructor(options, system) {
-    const opts = typeof options === 'function' ?
-      createTransformOpts(options, system)
-      : { ...(options || {}), system };
-    super(opts);
-  }
-}
 
 const newSystemUDP = opts => {
   // Consume all the configuration options
@@ -97,10 +70,14 @@ const newSystemUDP = opts => {
     });
 
     server.on('message', (message, rinfo) => {
+      console.log('incoming message');
+      console.log(addresses);
       const { address, port } = rinfo;
+      console.log(rinfo);
       const destinationStream = addresses[`${address || ''}:${port}`].inbound;
 
       if (destinationStream) {
+        console.log('found dat destination stream');
         destinationStream.write(message);
       }
     });
@@ -128,7 +105,7 @@ const newSystemUDP = opts => {
 
     if (addresses[destinationStr]) {
       return new Error(
-        'The system at ${destination} has already been registered; unregister it and try again'
+        `The system at ${destination} has already been registered; unregister it and try again`
       );
     }
 

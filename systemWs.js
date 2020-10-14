@@ -1,31 +1,8 @@
 const http = require('http');
 const https = require('https');
-const { Transform } = require('stream');
 const express = require('express');
 const WebSocket = require('ws');
-
-const createTransformOpts = (func, system) => ({
-  system,
-  objectMode: true,
-  transform: function(data, _, cb) {
-    const transformed = func(data, this.system);
-
-    if (transformed instanceof Error) {
-      cb(transformed);
-    } else {
-      cb(null, transformed);
-    }
-  }
-});
-
-class ConfigurableTransform extends Transform {
-  constructor(options, system) {
-    const opts = typeof options === 'function' ?
-      createTransformOpts(options, system)
-      : { ...(options || {}), system };
-    super(opts);
-  }
-}
+const ConfigurableTransform = require('./ConfigurableTransform');
 
 /**
  *

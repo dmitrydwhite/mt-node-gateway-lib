@@ -120,8 +120,8 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
       if (handlers.message) handlers.message(chunk);
     };
 
-    ws.onerror = () => {
-      if (handlers.error) handlers.error();
+    ws.onerror = (...args) => {
+      if (handlers.error) handlers.error(...args);
     }
   };
 
@@ -133,8 +133,6 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
     ws = null;
     open();
   };
-
-  const send = data => (ws && ws.send(data));
 
   const getReadyState = () => readyState;
   const getProtocol = () => protocol;
@@ -155,6 +153,16 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
     if (Number.isFinite(x)) {
       retryDelay = x;
     }
+  };
+
+  const send = data => {
+    if (!ws || !readyState) {
+      throw new Error(`Failed to execute 'send' on 'WebSocket': WebSocket has not been opened`)
+    } else if (readyState !== WebSocket.OPEN) {
+      throw new Error(`Failed to execute 'send' on 'WebSocket': Still in ${readyState} state.`);
+    }
+
+    ws.send(data)
   };
 
   return {

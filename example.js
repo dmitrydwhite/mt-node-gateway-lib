@@ -5,15 +5,16 @@ const myManager = manager({
   gatewayToken: '26f57249cbe7ea71d7535bebc206635dba15fd2d104e693f284395a98d0457a1',
 });
 
-myManager.addChannel('websocket', { useInsecure: true });
-myManager.translateOutboundFor('websocket', command => {
-  const { id, type, fields } = command;
+myManager.addChannel('udp');
+myManager.addSystem('udpBurster', 'udp', 41014);
+myManager.translateOutboundFor('udp', JSON.stringify);
+myManager.translateInboundFor('udp', buf => {
+  console.log('got udp message');
+  const asStr = buf.toString();
+  const asObj = JSON.parse(asStr);
+  console.log(asObj);
 
-  return `ID:${id}/TYPE:${type.toUpperCase()}/${fields.map(({ name, value }) => `${name.toUpperCase()}:${value}/`)}`;
-});
-
-['loadDriver', 'happenator', 'hapticProcessor'].forEach(sys => {
-  myManager.addSystem(sys, 'websocket');
+  return asObj;
 });
 
 myManager.connectToMajorTom();

@@ -144,6 +144,24 @@ const newGatewayManager = ({
     commandQueuer.addSystem(systemName);
   };
 
+  const sendCommandDefinitions = defsUpdate => {
+    let defsObject;
+
+    if (typeof definitions === 'string') {
+      try {
+        defsObject = JSON.parse(defsUpdate)
+      } catch (err) {
+        return err;
+      }
+    } else {
+      defsObject = defsUpdate;
+    }
+
+    const { system, definitions } = defsObject;
+
+    majorTom.updateCommandDefinitions(system, definitions);
+  };
+
   const connectToMajorTom = () => {
     majorTom.connect();
   };
@@ -394,6 +412,7 @@ const newGatewayManager = ({
 
   // Listen on our inbound stream for message types and command state updates coming from systems
   internalStream.on('data', data => {
+    console.log('landed up here');
     const inputString = data.toString();
     const asObj = JSON.parse(inputString);
     const {
@@ -421,6 +440,7 @@ const newGatewayManager = ({
     } else if (type === 'file_metadata_update' && downlinked_file) {
       majorTom.transmit(asObj);
     } else if (type === 'measurements' && measurements) {
+      console.log('landed here');
       majorTom.transmitMetrics(measurements);
     }
   });
@@ -440,6 +460,7 @@ const newGatewayManager = ({
     translateInboundFor,
     handleOnGateway,
     processOnGateway,
+    sendCommandDefinitions,
     validateCommand,
   };
 };
