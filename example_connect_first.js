@@ -9,7 +9,7 @@ const myGateway = newNodeGateway({
 });
 
 // A base object that we'll add our values to:
-const metricObj = { system: 'TEST_CALM', subsystem: 'counter', metric: 'count' };
+const metricObj = { system: 'TEST_A', subsystem: 'a_counter', metric: 'a_count' };
 let count = 200;
 
 // We connect first:
