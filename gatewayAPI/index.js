@@ -5,8 +5,6 @@ const downloadStagedFromMt = require('./downloadStagedFile');
 const uploadFileToMt = require('./uploadDownlinkedFile');
 const { ONE_SECOND } = require('../constants');
 
-const log = (...m) => console.dir(...m, { depth: null, colors: true });
-
 /**
  * Create a new connection to Major Tom.
  * @param {Object} param0 The configuration for the gateway
@@ -20,6 +18,7 @@ const log = (...m) => console.dir(...m, { depth: null, colors: true });
  * @param {Function} param0.errorCallback The function to call when an error message is received from Major Tom
  * @param {Function} param0.rateLimitCallback The function to call when a rate limit message is received from Major Tom
  * @param {Function} param0.cancelCallback The function to call when a cancel message is received from Major Tom
+ * @param {Boolean} param0.verbose True if this should log to console
  */
 const newNodeGateway = ({
   host,
@@ -32,6 +31,7 @@ const newNodeGateway = ({
   errorCallback,
   rateLimitCallback,
   cancelCallback,
+  verbose,
 }) => {
   const restHost = `http${http ? '' : 's'}://${host}`;
   const majorTomOutbound = new Outbound();
@@ -40,6 +40,20 @@ const newNodeGateway = ({
   let majortom;
 
   majorTomOutbound.setEncoding('utf8');
+
+  const log = (...m) => {
+    if (!verbose) return;
+
+    const writeArgs = m.map(arg => {
+      if (typeof arg === 'object') {
+        return JSON.stringify(arg);
+      }
+
+      return arg;
+    });
+
+    process.stdout.write([...writeArgs, '\r'].join(' '));
+  }
 
   /**
    * Calls rateLimitCallback; if not implemented handles rate limiting.
@@ -58,6 +72,8 @@ const newNodeGateway = ({
       const delayMs = retry_after * ONE_SECOND;
       const waitBetweenMsgs = Math.floor(ONE_SECOND / rate);
 
+      log(`⚠️ Received rate limit message, throttling to 1 message every ${waitBetweenMsgs}`);
+
       majorTomOutbound.pause();
       majorTomOutbound.setWaitTime(waitBetweenMsgs);
 
@@ -74,8 +90,7 @@ const newNodeGateway = ({
 
     if (!done) {
       if (!commandCallback) log('No command callback implemented');
-      log('Command received:');
-      log(message);
+      log('Command received:', message);
     }
   };
 
@@ -86,8 +101,7 @@ const newNodeGateway = ({
 
     if (!done) {
       if (!cancelCallback) log('No cancel callback implemented');
-      log('Cancel received');
-      log(message);
+      log('Cancel received:', message);
     }
   };
 
@@ -98,8 +112,7 @@ const newNodeGateway = ({
 
     if (!done) {
       if (!errorCallback) log('No error callback implemented');
-      log('Error received:');
-      log(message);
+      log('Error received:', message);
     }
   };
 
@@ -115,8 +128,7 @@ const newNodeGateway = ({
     }
 
     majorTomOutbound.write(toSend);
-    log('Sending to Major Tom:');
-    log(mtMsg);
+    log('Sending to Major Tom:', mtMsg);
   };
 
   const transmitCommandUpdate = (id, state, opts) => {
@@ -133,7 +145,6 @@ const newNodeGateway = ({
   };
 
   const transmitMetrics = metrics => {
-    console.log('got some metrics', metrics);
     const measurements = {
       type: 'measurements',
       measurements: metrics.map(({
@@ -360,6 +371,7 @@ class NodeGateway {
       errorCallback,
       rateLimitCallback,
       cancelCallback,
+      verbose,
     });
   }
 }

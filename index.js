@@ -1,7 +1,3 @@
-const { newNodeGateway } = require('./gatewayAPI');
-const newGatewayManager = require('./gatewayManager');
+const { newNodeGateway, NodeGateway } = require('./gatewayAPI');
 
-module.exports = {
-  newNodeGateway,
-  newGatewayManager,
-};
+module.exports = { newNodeGateway, NodeGateway };

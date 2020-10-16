@@ -13,13 +13,9 @@
     "Gateway",
     "API"
   ],
-  "engines": {
-    "node": "^8.11.1"
-  },
   "author": "Dmitry White",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.17.1",
     "request": "^2.88.2",
     "ws": "^7.3.0"
   }

@@ -1,67 +1,118 @@
-# Major Tom Gateway API Package
+# `Node Gateway API`
 
-NPM Package for interacting with Major Tom's Gateway API.
+To use the Node Gateway API one must `require('mt-node-gateway-api');`
 
-## The gateway object
+## `Node Gateway Object`
 
-The Gateway API functions are accessible once a new gateway object has been instantiated. This is
-the simplest way to communicate with Major Tom.
-
+To create a Major Tom Node Gateway connection:
 ```js
-import MTGateway from 'major-tom-gateway';
+const { newNodeGateway } = require('mt-node-gateway-api');
 
-const myHost = 'you.majortom.cloud';
-const myToken = 'your-gateway-token'; // Find this in the Major Tom UI on your gateway's page
-
-const myGatewayObject = MTGateway(myHost, myToken);
+const myGatewayConnection = newNodeGateway(options);
 ```
 
-Check out the Docs to see its use. Also check out the quick start below.
-
-The `connect` function must be called in order to start receiving messages from Major Tom.
-
-The `major-tom-gateway` Package is currently in Beta, so please submit an issue or come talk to us
-if you have any comments/questions/feedback.
-
-## The gateway manager
-
-The gateway manager is a convenience wrapper around the gateway object that also allows for connecting systems over various channels.
-
-## Quick Start
-
-You can start a simple Major Tom gateway right in your node REPL! First off, start an interactive
-node REPL session in a terminal window:
-```sh
-$ node
-```
-Now you're in a node environment. First off, let's require this package, as well as set variables
-related to our Major Tom instance, and our gateway.
-
+or if you're more comfortable with class-based instantiation:
 ```js
-const { newGatewayManager } = require('major-tom-gateway');
+const { NodeGateway } = require('mt-node-gateway');
 
-// We'll name these variables the same as the property names for the gateway manager configuration
-// object, so we can use object property shorthand.
-const host = '<your app host>'; // Usually something like you.majortom.cloud
-const gatewayToken = '<your gateway token>'; // This is found in the Major Tom gateway UI
-
-// Now we'll create our Gateway Object. We'll name it with a short name so we can minimize typing:
-const g = newGatewayManager({ host, gatewayToken });
-
-// Remember we still aren't connected yet, until we explicitly call `connectToMajorTom`:
-g.connectToMajorTom();
-```
-Now if everything went swimmingly, we're connected to Major Tom. You should see a greeting message from Major Tom in the node REPL. So we have one side of the gateway ready; now we need to set up the other side as well. This ability to modify your connection with Major Tom in real time is what makes the gateway manager a helpful tool.
-
-Next let's add a system. For this demo, we'll inform the gateway manager that we're going to be connecting to our system over WebSocket:
-```js
-g.addChannel('websocket');
-```
-For this demo, it's as simple as that. Check out the Channels docs to see how each channel can be configured.
-
-Next we'll inform the manager to expect a system named `"PageSystem"` to be connecting to the gateway over WebSocket. We _do_ need to inform the gateway manager _before_ the system tries to connect, so that the gateway can validate the system when it tries to connect. (The WebSocket channel provides a default means of validating the connection; see the Channel docs for details on the default validation, and for instructions on creating your custom validation.)
-
-```js
-g.addSystem('PageSystem', 'websocket');
+const myGatewayConnection = new NodeGateway(...instantiationArgs);
 ```
 
+### `newNodeGateway(options)`
+
+* `options` `<Object>` Set of configuration options to establish the API connection.
+  - `host` `<String>` The host for the connection's Major Tom instance, e.g. `"you.majortom.cloud"`.
+  - `gatewayToken` `<String>` The gateway token; find it in the gateway page for this gateway in your Major Tom UI.
+  - `[basicAuth]` `<String>` Encrypted basic auth string with username and password, if your instance requires it.
+  - `[http]` `<Boolean>` Pass `true` here if the gateway should connect over an insecure http connection.
+  - `[commandCallback]` `<Function>` The function to run when a command message is received from Major Tom.
+  - `[cancelCallback]` `<Function>` The function to run when a cancel command message is received from Major Tom.
+  - `[errorCallback]` `<Function>` The function to run when an error message is received from Major Tom.
+  - `[rateLimitCallback]` `<Function>` The function to run when a rate limit message is received from Major Tom.
+  - `[sslVerify]` `<Object>` Used to establish secure socket layer
+  - `[sslCaBundle]` `<Object>` Used to establish secure socket layer
+  - `[verbose]` `<Boolean>` If true, will overwrite the latest message to process.stdout
+
+* Returns: `<NodeGatewayConnection>`
+
+### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, verbose)`
+
+* Returns: `<NodeGatewayConnection>`
+
+See the descriptions above for each of the arguments. This pattern matches more closely with the Python implementation; however the object parameter pattern used for `newNodeGateway` makes it simpler to pass only the arguments needed when instantiating.
+
+### `NodeGatewayConnection`
+
+#### `connection.connect()`
+Establishes or re-establishes the WebSocket connection with Major Tom based on the host and gateway token used in instantiation.
+
+#### `connection.cancelCommand(id)`
+* `id` `<Number>` The id of the command to cancel
+
+Informs Major Tom that the command with the passed id has been cancelled. Convenience method for calling `transmitCommandUpdate` with the state `'cancelled'`.
+
+#### `connection.completeCommand(id[,output])`
+* `id` `<Number>` The id of the command to complete
+* `output` `<String>` The output of the completed command
+
+Informs Major Tom that the command with the passed id has successfully completed. The passed output will be present in the Major Tom UI. Convenience method for calling `transmitCommandUpdate` with the state `'completed'`.
+
+#### `connection.failCommand(id[,errors])`
+* `id` `<Number>` The id of the command that failed
+* `errors` `<Array>` An array of errors generated during the command failure
+
+Informs Major Tom that the command with the passed id has failed. The passed errors Array will be present in the Major Tom UI. Convenience method for calling `transmitCommandUpdate` with the state `'failed'`.
+
+#### `connection.transmit(message)`
+* `message` `<String|Buffer|Object>` The message to send to Major Tom.
+
+If `message` is a String or a Buffer, `transmit` will assume that in its String form it is correctly formed JSON and pass it directly to Major Tom. If it is an Object, it will be `JSON.stringify`ed.
+
+#### `connection.transmitCommandUpdate(id,state[,options])`
+* `id` `<Number>` The id of the command to update
+* `state` `<String>` The next command state, must be one of `Major Tom Command States`
+* `options` `<Object>` Information for Major Tom about the command's state; see Major Tom Gateway Docs for details of this object.
+
+#### `connection.transmitEvents(event)`
+* `event` `<Object>` The event details; see Major Tom Gateway Docs for details of this object.
+
+#### `connection.transmitMetrics(metrics)`
+* `metrics` `<Array>` The metrics to send to Major Tom; see Major Tom Gateway Docs for details of the objects in this Array.
+
+#### `connection.transmittedCommand(id[,payload])`
+* `id` `<Number>` The command to indicate has been transmitted to a system
+* `payload` `<String>` Information about the command
+
+Informs Major Tom that the command has been transmitted to the destination system. Convenience method for calling `transmitCommandUpdate` with the state `'transmitted_to_system'`.
+
+#### `connection.updateCommandDefinitions(system, definitions)`
+* `system` `<String>` The name or String identifier of the system to update command definitions
+* `definitions` `<Array>` An array of defninitions objects; see Major Tom Gateway Docs for details of the objects in this Array.
+
+#### `connection.updateFileList(system,files[,timestamp])`
+* `system` `<String>` The name or String identifier of the system to provide a file list for
+* `files` `<Array>` An array of file information objects; see Major Tom Gateway Docs for details of the objects in this Array.
+
+#### `connection.downloadStagedFile(gatewayDownloadPath[,resultStream])`
+* `gatewayDownloadPath` `<String>` The url path where Major Tom is storing the file to download to the gateway.
+* `resultStream` `<Stream.Writable>` A Node Writable Stream where the file can be written to, e.g. a Stream created with `fs.createWriteStream()`
+* Returns: `<Promise>`
+
+If a `resultStream` is provided, the downloaded file will be written to that Stream, and nothing will be resolved from the Promise. Otherwise, after a successful download the promise will be resolved with the file in the form of a Node `<Buffer>`.
+
+#### `connection.uploadDownlinkedFile(filename,filepath,system[,timestamp[,contentType[,commandId[,metadata]]]])`
+* `filename` `<String>` The name that will represent this file in the Major Tom UI.
+* `filepath` `<Buffer|String>` If this argument is a String then this method will naively attempt to resolve it using `fs.readFileSync`. If that fails, it will assume it's the desired file to upload, and convert it to a Node `<Buffer>`
+* `system` `<String>` The name or String identifier of the system associated with this file
+* `timestamp` `<Number>` a UNIX epoch in milliseconds UTC; defaults to when this method was called
+* `contentType` `<String>` The file content type; defaults to `'binary/octet-stream'`
+* `commandId` `<Number>` Optionally associate this file with a command
+* `metadata` `<Object|String>` Optional metadata about this file in Object or String form
+
+#### `connection.pipeFromMajorTom()`
+
+Gives the implementer direct access to the Readable Stream of incoming messages from Major Tom.
+
+#### `connection.pipeToMajorTom()`
+
+Gives the implementer direct access to the Writable Stream to send messages directly to Major Tom.
