@@ -31,6 +31,7 @@ const newNodeGateway = ({
   errorCallback,
   rateLimitCallback,
   cancelCallback,
+  transitCallback,
   verbose,
 }) => {
   const restHost = `http${http ? '' : 's'}://${host}`;
@@ -115,6 +116,17 @@ const newNodeGateway = ({
       log('Error received:', message);
     }
   };
+
+  const transitHandler = message => {
+    const done = transitCallback &&
+      typeof transitCallback === 'function' &&
+      transitCallback(message);
+
+    if (!done) {
+      if (!transitCallback) log('No transit callback implemented');
+      log('Major Tom expects a ground-station transit will occur: ', message);
+    }
+  }
 
   const transmit = mtMsg => {
     let toSend;
@@ -321,6 +333,7 @@ const newNodeGateway = ({
     command: commandHandler,
     error: errorHandler,
     cancel: cancelHandler,
+    transit: transitHandler,
   };
 
   const pipeFromMajorTom = () => fromMajorTom;
@@ -358,6 +371,7 @@ class NodeGateway {
     errorCallback,
     rateLimitCallback,
     cancelCallback,
+    transitCallback,
     verbose,
   ) {
     return newNodeGateway({
@@ -371,6 +385,7 @@ class NodeGateway {
       errorCallback,
       rateLimitCallback,
       cancelCallback,
+      transitCallback,
       verbose,
     });
   }
