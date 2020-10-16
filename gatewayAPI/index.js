@@ -3,7 +3,7 @@ const Outbound = require('./Outbound');
 const connectToMt = require('./connect');
 const downloadStagedFromMt = require('./downloadStagedFile');
 const uploadFileToMt = require('./uploadDownlinkedFile');
-const { ONE_SECOND } = require('../constants');
+const { ONE_SECOND, ONE_MINUTE } = require('../constants');
 
 /**
  * Create a new connection to Major Tom.
@@ -53,7 +53,7 @@ const newNodeGateway = ({
       return arg;
     });
 
-    process.stdout.write([...writeArgs, '\r'].join(' '));
+    process.stdout.write([...writeArgs, '\n'].join(' '));
   }
 
   /**
@@ -68,14 +68,15 @@ const newNodeGateway = ({
       typeof rateLimitCallback === 'function' &&
       rateLimitCallback(message);
 
-    if (!done) {
+    if (!done && !majorTomOutbound.isPaused()) {
+      majorTomOutbound.pause();
+
       const { rate, retry_after, error } = message.rate_limit;
       const delayMs = retry_after * ONE_SECOND;
-      const waitBetweenMsgs = Math.floor(ONE_SECOND / rate);
+      const waitBetweenMsgs = Math.floor(ONE_MINUTE / rate);
 
-      log(`⚠️ Received rate limit message, throttling to 1 message every ${waitBetweenMsgs}`);
+      log(`⚠️ Received rate limit message, throttling to 1 message every ${waitBetweenMsgs}ms`);
 
-      majorTomOutbound.pause();
       majorTomOutbound.setWaitTime(waitBetweenMsgs);
 
       setTimeout(() => {
@@ -140,7 +141,6 @@ const newNodeGateway = ({
     }
 
     majorTomOutbound.write(toSend);
-    log('Sending to Major Tom:', mtMsg);
   };
 
   const transmitCommandUpdate = (id, state, opts) => {
@@ -266,6 +266,7 @@ const newNodeGateway = ({
 
   const startMajorTomOutboundStream = () => {
     majorTomOutbound.on('data', data => {
+      log('Sending to Major Tom:', data);
       majortom.send(data);
     })
   }

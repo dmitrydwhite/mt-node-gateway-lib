@@ -1,5 +1,5 @@
 const { Duplex } = require('stream');
-const BASE_WAIT_TIME = 133;
+const BASE_WAIT_TIME = 136;
 
 class Outbound extends Duplex {
   constructor(opts) {
@@ -17,25 +17,21 @@ class Outbound extends Duplex {
 
   _write(chunk, encoding, callback) {
     this.data.push(chunk);
-    this._read();
     callback();
   }
 
   _read() {
     const right_now = Date.now();
     const diff = right_now - this.lastPush;
-    const chunk = this.data.shift();
 
-    if (!chunk) return;
-
-    if (diff > this.waitTime) {
-      this.lastPush = right_now;
-      this.push(chunk, 'utf8');
-    } else {
+    if (diff < this.waitTime) {
       setTimeout(() => {
         this.lastPush = Date.now();
-        this.push(chunk);
+        this.push(this.data.shift());
       }, this.waitTime - diff);
+    } else {
+      this.lastPush = right_now;
+      this.push(this.data.shift());
     }
   }
 }
