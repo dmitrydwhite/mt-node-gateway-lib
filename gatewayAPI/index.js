@@ -18,6 +18,7 @@ const { ONE_SECOND, ONE_MINUTE } = require('../constants');
  * @param {Function} param0.errorCallback The function to call when an error message is received from Major Tom
  * @param {Function} param0.rateLimitCallback The function to call when a rate limit message is received from Major Tom
  * @param {Function} param0.cancelCallback The function to call when a cancel message is received from Major Tom
+ * @param {Function} param0.transitCallback The function to call when a transit message is received from Major Tom
  * @param {Boolean} param0.verbose True if this should log to console
  */
 const newNodeGateway = ({

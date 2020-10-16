@@ -1,19 +1,19 @@
 # `Node Gateway API`
 
-To use the Node Gateway API one must `require('mt-node-gateway-api');`
+To use the Node Gateway API one must clone this repo, and then require this package.
 
 ## `Node Gateway Object`
 
 To create a Major Tom Node Gateway connection:
 ```js
-const { newNodeGateway } = require('mt-node-gateway-api');
+const { newNodeGateway } = require('local/path/to/mt-node-gateway-api');
 
 const myGatewayConnection = newNodeGateway(options);
 ```
 
 or if you're more comfortable with class-based instantiation:
 ```js
-const { NodeGateway } = require('mt-node-gateway');
+const { NodeGateway } = require('local/path/to/mt-node-gateway-api');
 
 const myGatewayConnection = new NodeGateway(...instantiationArgs);
 ```
@@ -29,13 +29,14 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
   - `[cancelCallback]` `<Function>` The function to run when a cancel command message is received from Major Tom.
   - `[errorCallback]` `<Function>` The function to run when an error message is received from Major Tom.
   - `[rateLimitCallback]` `<Function>` The function to run when a rate limit message is received from Major Tom.
+  - `[transitCallback]` `<Function>` The function to run when a transit message is received from Major Tom
   - `[sslVerify]` `<Object>` Used to establish secure socket layer
   - `[sslCaBundle]` `<Object>` Used to establish secure socket layer
-  - `[verbose]` `<Boolean>` If true, will overwrite the latest message to process.stdout
+  - `[verbose]` `<Boolean>` If true, will write the messages to `process.stdout`
 
 * Returns: `<NodeGatewayConnection>`
 
-### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, verbose)`
+### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose)`
 
 * Returns: `<NodeGatewayConnection>`
 
