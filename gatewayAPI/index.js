@@ -1,3 +1,4 @@
+const { EventEmitter } = require('events');
 const Inbound = require('./Inbound');
 const Outbound = require('./Outbound');
 const connectToMt = require('./connect');
@@ -38,6 +39,7 @@ const newNodeGateway = ({
   const restHost = `http${http ? '' : 's'}://${host}`;
   const majorTomOutbound = new Outbound();
   const fromMajorTom = new Inbound();
+  const eventBus = new EventEmitter();
   let waiting = true;
   let majortom;
 
@@ -92,6 +94,7 @@ const newNodeGateway = ({
       commandCallback(message.command);
 
     if (!done) {
+      eventBus.emit('command', message.command);
       if (!commandCallback) log('No command callback implemented');
       log('Command received:', message);
     }
@@ -103,6 +106,7 @@ const newNodeGateway = ({
       cancelCallback(message.command.id);
 
     if (!done) {
+      eventBus.emit('cancel', message.command.id);
       if (!cancelCallback) log('No cancel callback implemented');
       log('Cancel received:', message);
     }
@@ -114,6 +118,7 @@ const newNodeGateway = ({
       errorCallback(message);
 
     if (!done) {
+      eventBus.emit('majorTomError', message);
       if (!errorCallback) log('No error callback implemented');
       log('Error received:', message);
     }
@@ -125,6 +130,7 @@ const newNodeGateway = ({
       transitCallback(message);
 
     if (!done) {
+      eventBus.emit('transit', message);
       if (!transitCallback) log('No transit callback implemented');
       log('Major Tom expects a ground-station transit will occur: ', message);
     }
@@ -342,6 +348,12 @@ const newNodeGateway = ({
 
   const pipeToMajorTom = () => majorTomOutbound;
 
+  const emitterInterface = {};
+
+  for (prop in eventBus) {
+    emitterInterface[prop] = eventBus[prop];
+  }
+
   return {
     connect,
     cancelCommand,
@@ -358,6 +370,7 @@ const newNodeGateway = ({
     updateFileList,
     downloadStagedFile,
     uploadDownlinkedFile,
+    ...emitterInterface,
   };
 };
 
