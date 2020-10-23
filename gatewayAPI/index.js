@@ -185,6 +185,17 @@ const newNodeGateway = ({
     transmit(measurements);
   };
 
+  /**
+   * Transmit the passed event to Major Tom
+   * @param {Object} event The event to transmit
+   * @param {Number} event.command_id The associated command ID
+   * @param {String} event.debug The debug string for the event
+   * @param {String} event.level One of 'nominal', 'warning', 'debug', 'error', 'critical'
+   * @param {String} event.message The event message string
+   * @param {String} event.system The system associated with this event
+   * @param {Number} event.timestamp The time for this event
+   * @param {String} event.type Description of the type of event
+   */
   const transmitEvents = event => {
     const {
       command_id,
