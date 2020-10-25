@@ -196,20 +196,19 @@ const newNodeGateway = ({
    * @param {Number} event.timestamp The time for this event
    * @param {String} event.type Description of the type of event
    */
-  const transmitEvents = event => {
-    const {
-      command_id,
-      debug,
-      level,
-      message,
-      system,
-      timestamp,
-      type,
-    } = event;
+  const transmitEvents = eventParam => {
+    const events = (Array.isArray(eventParam) ? eventParam : [eventParam]).map(event => {
+      const {
+        command_id,
+        debug,
+        level,
+        message,
+        system,
+        timestamp,
+        type,
+      } = event;
 
-    const eventUpdate = {
-      type: 'event',
-      event: {
+      return {
         command_id,
         debug,
         system,
@@ -217,7 +216,12 @@ const newNodeGateway = ({
         level: level || 'nominal',
         timestamp: timestamp || Date.now(),
         type: type || 'Gateway Event',
-      },
+      };
+    });
+
+    const eventUpdate = {
+      type: 'event',
+      events,
     };
 
     transmit(eventUpdate);
