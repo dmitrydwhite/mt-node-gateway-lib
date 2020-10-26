@@ -45,6 +45,8 @@ const newNodeGateway = ({
 
   majorTomOutbound.setEncoding('utf8');
 
+  /********** These are methods used internally by the library **********/
+
   const log = (...m) => {
     if (!verbose) return;
 
@@ -134,128 +136,6 @@ const newNodeGateway = ({
       if (!transitCallback) log('No transit callback implemented');
       log('Major Tom expects a ground-station transit will occur: ', message);
     }
-  }
-
-  const transmit = mtMsg => {
-    let toSend;
-
-    if (mtMsg instanceof Buffer) {
-      toSend = mtMsg.toString();
-    } else if (typeof mtMsg === 'string') {
-      toSend = mtMsg;
-    } else {
-      toSend = JSON.stringify(mtMsg);
-    }
-
-    majorTomOutbound.write(toSend);
-  };
-
-  const transmitCommandUpdate = (id, state, opts) => {
-    const update = {
-      type: 'command_update',
-      command: {
-        ...(opts || {}),
-        id,
-        state,
-      },
-    };
-
-    transmit(update);
-  };
-
-  const transmitMetrics = metrics => {
-    const measurements = {
-      type: 'measurements',
-      measurements: metrics.map(({
-          system,
-          subsystem,
-          metric,
-          value,
-          timestamp,
-        }) => ({
-          system,
-          subsystem,
-          metric,
-          value,
-          timestamp: timestamp || Date.now(),
-        })
-      ),
-    };
-
-    transmit(measurements);
-  };
-
-  /**
-   * Transmit the passed event to Major Tom
-   * @param {Object} event The event to transmit
-   * @param {Number} event.command_id The associated command ID
-   * @param {String} event.debug The debug string for the event
-   * @param {String} event.level One of 'nominal', 'warning', 'debug', 'error', 'critical'
-   * @param {String} event.message The event message string
-   * @param {String} event.system The system associated with this event
-   * @param {Number} event.timestamp The time for this event
-   * @param {String} event.type Description of the type of event
-   */
-  const transmitEvents = eventParam => {
-    const events = (Array.isArray(eventParam) ? eventParam : [eventParam]).map(event => {
-      const {
-        command_id,
-        debug,
-        level,
-        message,
-        system,
-        timestamp,
-        type,
-      } = event;
-
-      return {
-        command_id,
-        debug,
-        system,
-        message: message || 'No message description received at gateway',
-        level: level || 'nominal',
-        timestamp: timestamp || Date.now(),
-        type: type || 'Gateway Event',
-      };
-    });
-
-    const eventUpdate = {
-      type: 'event',
-      events,
-    };
-
-    transmit(eventUpdate);
-  };
-
-  const cancelCommand = id => transmitCommandUpdate(id, 'cancelled');
-  const completeCommand = (id, output) => transmitCommandUpdate(id, 'completed', { output });
-  const failCommand = (id, errors) => transmitCommandUpdate(id, 'failed', { errors });
-  const transmittedCommand = (id, payload) =>
-    transmitCommandUpdate(id, 'transmitted_to_system', { payload: payload || 'None Provided' });
-
-  const updateCommandDefinitions = (system, definitions) => {
-    const defsUpdate = {
-      type: 'command_definitions_update',
-      command_definitions: {
-        system,
-        definitions,
-      },
-    };
-
-    transmit(defsUpdate);
-  };
-
-  const updateFileList = (system, files, timestamp) => {
-    const filesUpdate = {
-      type: 'file_list',
-      file_list: {
-        system,
-        files,
-        timestamp: timestamp || Date.now(),
-      },
-    };
-
-    transmit(filesUpdate);
   };
 
   const handleMessage = message => {
@@ -291,8 +171,193 @@ const newNodeGateway = ({
       log('Sending to Major Tom:', data);
       majortom.send(data);
     })
-  }
+  };
 
+  const messageHandlers = {
+    hello: message => log(message),
+    rate_limit: rateLimitHandler,
+    command: commandHandler,
+    error: errorHandler,
+    cancel: cancelHandler,
+    transit: transitHandler,
+  };
+
+  /********** These are methods exposed to the library **********/
+
+  /**
+   * Takes a Buffer, String, or Object. If Buffer or String is received, assumes that it is properly
+   * formatted JSON. Converts a received Object to a JSON string. Transmits the JSON to Major Tom.
+   * @param {Buffer|String|Object} mtMsg The message to send to Major Tom
+   */
+  const transmit = mtMsg => {
+    let toSend;
+
+    if (mtMsg instanceof Buffer) {
+      toSend = mtMsg.toString();
+    } else if (typeof mtMsg === 'string') {
+      toSend = mtMsg;
+    } else {
+      toSend = JSON.stringify(mtMsg);
+    }
+
+    majorTomOutbound.write(toSend);
+  };
+
+  /**
+   * Transmits a command update to Major Tom for the provided command ID.
+   * @param {Number} id The command ID
+   * @param {String} state The new command state
+   * @param {Object} [opts] May be an object with additional command update fields, e.g. 'status', 'payload', 'output', 'errors'
+   */
+  const transmitCommandUpdate = (id, state, opts) => {
+    const update = {
+      type: 'command_update',
+      command: {
+        ...(opts || {}),
+        id,
+        state,
+      },
+    };
+
+    transmit(update);
+  };
+
+  /**
+   * Transmits an Array of metrics using the 'measurements' type of message to Major Tom.
+   * @typedef {Object} MetricObject
+   * @prop {String} system The system associated with the metric
+   * @prop {String} subsystem The subsystem associated with the metric
+   * @prop {String} metric The name of the metric
+   * @prop {Number} value The value of the metric
+   * @prop {Number} timestamp The time the metric was created; will be assigned to received time if not present
+   * @param {MetricObject[]} metrics The Array of metric objects to send to Major Tom
+   */
+  const transmitMetrics = metrics => {
+    const measurements = {
+      type: 'measurements',
+      measurements: metrics.map(({
+          system,
+          subsystem,
+          metric,
+          value,
+          timestamp,
+        }) => ({
+          system,
+          subsystem,
+          metric,
+          value,
+          timestamp: timestamp || Date.now(),
+        })
+      ),
+    };
+
+    transmit(measurements);
+  };
+
+  /**
+   * Transmit the passed event to Major Tom
+   * @typedef {Object} EventObject
+   * @prop {Number} command_id The associated command ID
+   * @prop {String} debug The debug string for the event
+   * @prop {String} level One of 'nominal', 'warning', 'debug', 'error', 'critical'
+   * @prop {String} message The event message string
+   * @prop {String} system The system associated with this event
+   * @prop {Number} timestamp The time for this event
+   * @prop {String} type Description of the type of event
+   * @param {EventObject|EventObject[]} eventParam The event to transmit
+   */
+  const transmitEvents = eventParam => {
+    const events = (Array.isArray(eventParam) ? eventParam : [eventParam]).map(event => {
+      const {
+        command_id,
+        debug,
+        level,
+        message,
+        system,
+        timestamp,
+        type,
+      } = event;
+
+      return {
+        command_id,
+        debug,
+        system,
+        message: message || 'No message description received at gateway',
+        level: level || 'nominal',
+        timestamp: timestamp || Date.now(),
+        type: type || 'Gateway Event',
+      };
+    });
+
+    const eventUpdate = {
+      type: 'event',
+      events,
+    };
+
+    transmit(eventUpdate);
+  };
+
+  /**
+   * Informs Major Tom that the command associated with the passed ID has been canceled. Shorthand
+   * for calling transmitCommandUpdate with a state of 'cancelled'.
+   * @param {Number} id The ID of the command to cancel
+   */
+  const cancelCommand = id => transmitCommandUpdate(id, 'cancelled');
+
+  /**
+   * Informs Major Tom that the command associated with the passed ID has successfully finished.
+   * Shorthand for calling transmitCommandUpdate with a state of 'completed'.
+   * @param {Number} id The ID of the command that has been completed
+   * @param {String} [output] The output of the command
+   */
+  const completeCommand = (id, output) => transmitCommandUpdate(id, 'completed', { output });
+
+  /**
+   * Informs Major Tom that the command associated with the passed ID has failed. Shorthand for
+   * calling transmitCommandUpdate with a state of 'failed'.
+   * @param {Number} id The ID of the command that has failed
+   * @param {Error[]} [errors] An array of the errors that occurred causing command failure
+   */
+  const failCommand = (id, errors) => transmitCommandUpdate(id, 'failed', { errors });
+
+  /**
+   * Informs Major Tom that the command associated with the passed ID has been sent to the system.
+   * Shorthand for calling transmitCommandUpdate with a status of 'transmitted_to_system'.
+   * @param {Number} id The id of the command that has been transmitted to the system
+   * @param {String} [payload] The payload that was sent to the system
+   */
+  const transmittedCommand = (id, payload) =>
+    transmitCommandUpdate(id, 'transmitted_to_system', { payload: payload || 'None Provided' });
+
+  const updateCommandDefinitions = (system, definitions) => {
+    const defsUpdate = {
+      type: 'command_definitions_update',
+      command_definitions: {
+        system,
+        definitions,
+      },
+    };
+
+    transmit(defsUpdate);
+  };
+
+  const updateFileList = (system, files, timestamp) => {
+    const filesUpdate = {
+      type: 'file_list',
+      file_list: {
+        system,
+        files,
+        timestamp: timestamp || Date.now(),
+      },
+    };
+
+    transmit(filesUpdate);
+  };
+
+  /**
+   * Connect to the Major Tom WebSocket using the host, token, and security credentials provided at
+   * instantiation.
+   */
   const connect = () => {
     if (majortom) {
       return majortom.refresh();
@@ -350,30 +415,30 @@ const newNodeGateway = ({
     gatewayToken,
   });
 
-  const messageHandlers = {
-    hello: message => log(message),
-    rate_limit: rateLimitHandler,
-    command: commandHandler,
-    error: errorHandler,
-    cancel: cancelHandler,
-    transit: transitHandler,
-  };
-
+  /**
+   * Provides access to the stream of messages coming from Major Tom
+   * @returns {Inbound} Subclass of Transform stream
+   */
   const pipeFromMajorTom = () => fromMajorTom;
 
+  /**
+   * Provides access to the single stream of messages to be sent to Major Tom
+   * @returns {Outbound} Subclass of Duplex stream
+   */
   const pipeToMajorTom = () => majorTomOutbound;
 
+  /********** Here we also expose an event emitter interface to the API **********/
   const emitterInterface = {};
 
   for (prop in eventBus) {
     emitterInterface[prop] = eventBus[prop];
   }
 
+  /**
+   * Return the API surface:
+   */
   return {
     connect,
-    cancelCommand,
-    completeCommand,
-    failCommand,
     pipeFromMajorTom,
     pipeToMajorTom,
     transmit,
@@ -381,6 +446,9 @@ const newNodeGateway = ({
     transmitEvents,
     transmitMetrics,
     transmittedCommand,
+    cancelCommand,
+    completeCommand,
+    failCommand,
     updateCommandDefinitions,
     updateFileList,
     downloadStagedFile,
