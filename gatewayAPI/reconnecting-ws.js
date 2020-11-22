@@ -56,6 +56,7 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
   const open = () => {
     ws = new WebSocket(url, protocols || []);
     ws.binaryType = 'blob';
+    readyState = WebSocket.CONNECTING;
 
     const localWs = ws;
 
@@ -101,7 +102,7 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
 
       if (handlers.close) handlers.close(closeData);
 
-      if (retryAttempts > maxRetries) {
+      if (retryAttempts >= maxRetries) {
         readyState = WebSocket.CLOSED;
         return;
       }
@@ -157,9 +158,16 @@ const ReconnectingWebsocket = (wsUrl, protocols, opts, WebSocket) => {
 
   const send = data => {
     if (!ws || !readyState) {
-      throw new Error(`Failed to execute 'send' on 'WebSocket': WebSocket has not been opened`)
+      refresh();
+      setTimeout(() => {
+        send(data);
+      }, 750);
+      // throw new Error(`Failed to execute 'send' on 'WebSocket': WebSocket has not been opened`)
     } else if (readyState !== WebSocket.OPEN) {
-      throw new Error(`Failed to execute 'send' on 'WebSocket': Still in ${readyState} state.`);
+      setTimeout(() => {
+        send(data);
+      }, 750);
+      // throw new Error(`Failed to execute 'send' on 'WebSocket': Still in ${readyState} state.`);
     }
 
     ws.send(data)
