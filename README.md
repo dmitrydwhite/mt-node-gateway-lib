@@ -1,19 +1,23 @@
 # `Node Gateway API`
 
-To use the Node Gateway API one must clone this repo, and then require this package.
+To use the Node Gateway API one must require this package from npm.
+
+```sh
+npm install majortom-gateway
+```
 
 ## `Node Gateway Object`
 
 To create a Major Tom Node Gateway connection:
 ```js
-const { newNodeGateway } = require('local/path/to/mt-node-gateway-api');
+const { newNodeGateway } = require('majortom-gateway');
 
 const myGatewayConnection = newNodeGateway(options);
 ```
 
 or if you're more comfortable with class-based instantiation:
 ```js
-const { NodeGateway } = require('local/path/to/mt-node-gateway-api');
+const { NodeGateway } = require('majortom-gateway');
 
 const myGatewayConnection = new NodeGateway(...instantiationArgs);
 ```
