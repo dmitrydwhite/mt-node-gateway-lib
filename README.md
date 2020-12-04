@@ -37,10 +37,11 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
   - `[sslVerify]` `<Object>` Used to establish secure socket layer
   - `[sslCaBundle]` `<Object>` Used to establish secure socket layer
   - `[verbose]` `<Boolean>` If true, will write the messages to `process.stdout`
+  - `[customLogger]` `<Function>` A custom logging function
 
 * Returns: `<NodeGatewayConnection>`
 
-### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose)`
+### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose, customLogger)`
 
 * Returns: `<NodeGatewayConnection>`
 

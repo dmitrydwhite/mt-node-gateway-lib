@@ -21,6 +21,7 @@ const { ONE_SECOND, ONE_MINUTE } = require('../constants');
  * @param {Function} param0.cancelCallback The function to call when a cancel message is received from Major Tom
  * @param {Function} param0.transitCallback The function to call when a transit message is received from Major Tom
  * @param {Boolean} param0.verbose True if this should log to console
+ * @param {Function} param0.customLogger A custom logging function that an implementer can use
  */
 const newNodeGateway = ({
   host,
@@ -35,6 +36,7 @@ const newNodeGateway = ({
   cancelCallback,
   transitCallback,
   verbose,
+  customLogger,
 }) => {
   const restHost = `http${http ? '' : 's'}://${host}`;
   const majorTomOutbound = new Outbound();
@@ -47,7 +49,7 @@ const newNodeGateway = ({
 
   /********** These are methods used internally by the library **********/
 
-  const log = (...m) => {
+  const internalLogger = (...m) => {
     if (!verbose) return;
 
     const writeArgs = m.map(arg => {
@@ -59,7 +61,9 @@ const newNodeGateway = ({
     });
 
     process.stdout.write([...writeArgs, '\n'].join(' '));
-  }
+  };
+
+  let log = (typeof customLogger === 'function' && customLogger) || internalLogger;
 
   /**
    * Calls rateLimitCallback; if not implemented handles rate limiting.
@@ -471,6 +475,7 @@ class NodeGateway {
     cancelCallback,
     transitCallback,
     verbose,
+    customLogger
   ) {
     return newNodeGateway({
       host,
@@ -485,6 +490,7 @@ class NodeGateway {
       cancelCallback,
       transitCallback,
       verbose,
+      customLogger,
     });
   }
 }
