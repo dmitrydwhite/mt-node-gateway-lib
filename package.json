@@ -1,0 +1,24 @@
+{
+  "name": "majortom-gateway",
+  "version": "0.3.6",
+  "description": "NodeJS API for Major Tom",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "NodeJS",
+    "Major Tom",
+    "majortom",
+    "Major",
+    "Tom",
+    "Gateway",
+    "API"
+  ],
+  "author": "Dmitry White",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.88.2",
+    "ws": "^7.3.0"
+  }
+}
