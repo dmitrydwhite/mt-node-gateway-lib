@@ -30,6 +30,7 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
   - `[basicAuth]` `<String>` Encrypted basic auth string with username and password, if your instance requires it.
   - `[http]` `<Boolean>` Pass `true` here if the gateway should connect over an insecure http connection.
   - `[commandCallback]` `<Function>` The function to run when a command message is received from Major Tom.
+  - `[blobCallback]` `<Function>` The function to run when a `received_blob` type message is received from Major Tom.
   - `[cancelCallback]` `<Function>` The function to run when a cancel command message is received from Major Tom.
   - `[errorCallback]` `<Function>` The function to run when an error message is received from Major Tom.
   - `[rateLimitCallback]` `<Function>` The function to run when a rate limit message is received from Major Tom.
@@ -41,7 +42,7 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
 
 * Returns: `<NodeGatewayConnection>`
 
-### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose, customLogger)`
+### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose, customLogger, blobCallback)`
 
 * Returns: `<NodeGatewayConnection>`
 
@@ -90,6 +91,12 @@ If `message` is a String or a Buffer, `transmit` will assume that in its String 
 * `payload` `<String>` Information about the command
 
 Informs Major Tom that the command has been transmitted to the destination system. Convenience method for calling `transmitCommandUpdate` with the state `'transmitted_to_system'`.
+
+#### `connection.transmitBlobForUplink(blob[,metaData])`
+* `blob` `<Buffer>` The raw byte string to transmit to a Ground Station Network
+* `metaData` `<Object>` An object with data about the blob that may be useful for the Ground Station Network connection
+
+Sends a byte array converted to a base64 string to a Ground Station Network (GSN) for uplink through the GSN.
 
 #### `connection.updateCommandDefinitions(system, definitions)`
 * `system` `<String>` The name or String identifier of the system to update command definitions

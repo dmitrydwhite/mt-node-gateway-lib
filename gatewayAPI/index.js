@@ -16,6 +16,7 @@ const { ONE_SECOND, ONE_MINUTE } = require('../constants');
  * @param {Boolean} param0.http True if the gateway should connect insecure
  * @param {*} param0.sslCaBundle I have no idea what this is
  * @param {Function} param0.commandCallback The function to call when the gateway receives a command from Major Tom
+ * @param {Function} param0.blobCallback The function to call when the gateway receives a blob message from Major Tom
  * @param {Function} param0.errorCallback The function to call when an error message is received from Major Tom
  * @param {Function} param0.rateLimitCallback The function to call when a rate limit message is received from Major Tom
  * @param {Function} param0.cancelCallback The function to call when a cancel message is received from Major Tom
