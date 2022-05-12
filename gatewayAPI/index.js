@@ -32,6 +32,7 @@ const newNodeGateway = ({
   http,
   sslCaBundle,
   commandCallback,
+  blobCallback,
   errorCallback,
   rateLimitCallback,
   cancelCallback,
@@ -107,6 +108,18 @@ const newNodeGateway = ({
     }
   };
 
+  const blobHandler = message => {
+    const done = blobCallback &&
+      typeof blobCallback === 'function' &&
+      blobCallback(message);
+
+    if (!done) {
+      eventBus.emit('blob', message);
+      if (!blobCallback) log('No blob callback implemented');
+      log(`Blob received:`, message.blob);
+    }
+  };
+
   const cancelHandler = message => {
     const done = cancelCallback &&
       typeof cancelCallback === 'function' &&
@@ -163,6 +176,7 @@ const newNodeGateway = ({
 
     if (type === 'hello' && waiting) {
       waiting = false;
+
       if (majorTomOutbound.isPaused()) {
         majorTomOutbound.resume();
       }
@@ -185,6 +199,7 @@ const newNodeGateway = ({
     error: errorHandler,
     cancel: cancelHandler,
     transit: transitHandler,
+    received_blob: blobHandler,
   };
 
   /********** These are methods exposed to the library **********/
@@ -206,6 +221,44 @@ const newNodeGateway = ({
     }
 
     majorTomOutbound.write(toSend);
+  };
+
+  /**
+   *
+   * @param {Buffer} blob
+   */
+  const transmitBlobForUplink = (blob, metaDataObj) => {
+    if (!(blob instanceof Buffer)) {
+      transmitEvents({
+        level: 'critical',
+        type: 'Gateway Error',
+        message: 'Attempted to transmit a blob for uplink but received data type that is not a Buffer',
+        debug: JSON.stringify({
+          received: blob,
+        }),
+      });
+
+      return;
+    }
+
+    if (metaDataObj && (typeof metaDataObj !== 'object') || Array.isArray(metaDataObj)) {
+      transmitEvents({
+        level: 'warning',
+        type: 'Gateway Warning',
+        message: 'Metadata for transmit blob for uplink must be an Object',
+        debug: JSON.stringify({
+          metadata: metaDataObj,
+        }),
+      });
+
+      return;
+    }
+
+    transmit({
+      type: 'transmit_blob',
+      blob: blob.toString('base64'),
+      ...(metaDataObj || {}),
+    });
   };
 
   /**
@@ -452,6 +505,7 @@ const newNodeGateway = ({
     transmitCommandUpdate,
     transmitEvents,
     transmitMetrics,
+    transmitBlobForUplink,
     transmittedCommand,
     cancelCommand,
     completeCommand,
@@ -479,7 +533,8 @@ class NodeGateway {
     transitCallback,
     verbose,
     customLogger,
-    altRestHost
+    altRestHost,
+    blobCallback
   ) {
     return newNodeGateway({
       host,
@@ -496,6 +551,7 @@ class NodeGateway {
       transitCallback,
       verbose,
       customLogger,
+      blobCallback,
     });
   }
 }
