@@ -41,7 +41,7 @@ const newNodeGateway = ({
   verbose,
   customLogger,
 }) => {
-  const restHost = `http${http ? '' : 's'}://${altRestHost || host}`;
+  const restHost = `http${http ? '' : 's'}://${basicAuth || ''}${altRestHost || host}`;
   const majorTomOutbound = new Outbound();
   const fromMajorTom = new Inbound();
   const eventBus = new EventEmitter();
