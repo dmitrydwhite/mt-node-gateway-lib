@@ -117,7 +117,7 @@ const newNodeGateway = ({
     if (!done) {
       eventBus.emit('blob', message);
       if (!blobCallback) log('No blob callback implemented');
-      log(`Blob received:`, message.blob);
+      log(`Blob string received`);
     }
   };
 
