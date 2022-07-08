@@ -98,7 +98,7 @@ const makeSecondRequest = ({
     uri,
     method: 'put',
     body: File,
-    headers: { 'Content-Type': contentType, 'Content-MD5': checksum, ...authHeader }
+    headers: { 'Content-Type': contentType, 'Content-MD5': checksum }
   }, (error, response) => {
     const { statusCode, statusMessage } = response || {};
 
