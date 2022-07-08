@@ -13,7 +13,7 @@ const getBasicAuthHeaderObj = basicAuthStr => {
 
   const stringToEncode = basicAuthStr.slice(-1) === '@' ? basicAuthStr.slice(0, -1) : basicAuthStr;
 
-  return { Authorization: `Basic ${Buffer.from(stringToEncode, 'base64').toString()}` };
+  return { Authorization: `Basic ${Buffer.from(stringToEncode).toString('base64')}` };
 };
 
 const downloadStagedFile = ({
