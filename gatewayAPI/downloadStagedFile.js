@@ -3,12 +3,26 @@ const https = require('https');
 const { Buffer } = require('buffer');
 const { Writable } = require('stream');
 
+/**
+ * @param {string} basicAuthStr
+ */
+const getBasicAuthHeaderObj = basicAuthStr => {
+  if (!basicAuthStr) {
+    return {};
+  }
+
+  const stringToEncode = basicAuthStr.slice(-1) === '@' ? basicAuthStr.slice(0, -1) : basicAuthStr;
+
+  return { Authorization: `Basic ${Buffer.from(stringToEncode, 'base64').toString()}` };
+};
+
 const downloadStagedFile = ({
   gatewayDownloadPath,
   gatewayToken,
   resultStream,
   restHost,
   useSecure,
+  basicAuth,
 }) => new Promise((resolve, reject) => {
   const nodeReq = useSecure ? https : http;
   const downloadUrl = new URL(gatewayDownloadPath, restHost).href;
@@ -16,7 +30,7 @@ const downloadStagedFile = ({
   const chunks = [];
 
   const get = destination => {
-    nodeReq.get(destination, { headers: { 'X-Gateway-Token': gatewayToken } }, response => {
+    nodeReq.get(destination, { headers: { 'X-Gateway-Token': gatewayToken, ...basicAuth } }, response => {
       const { statusCode, statusMessage } = response;
 
       if (statusCode >= 400) {

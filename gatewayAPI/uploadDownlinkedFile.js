@@ -18,6 +18,19 @@ const getFileFromAmbiguousArg = ambiguousArg => {
   }
 };
 
+/**
+ * @param {string} basicAuthStr
+ */
+const getBasicAuthHeaderObj = basicAuthStr => {
+  if (!basicAuthStr) {
+    return {};
+  }
+
+  const stringToEncode = basicAuthStr.slice(-1) === '@' ? basicAuthStr.slice(0, -1) : basicAuthStr;
+
+  return { Authorization: `Basic ${Buffer.from(stringToEncode, 'base64').toString()}` };
+};
+
 const calculateChecksum = File => new Promise(resolve => {
   const checksumCalculator = new Readable();
   const hashing = crypto.createHash('md5');
@@ -43,11 +56,12 @@ const makeFirstRequest = ({
   fileName,
   gatewayToken,
   restHost,
+  authHeader,
 }) => new Promise((resolve, reject) => {
   request({
     uri: new URL(RAILS_ACTIVE_STORAGE_PATH, restHost).href,
     method: 'post',
-    headers: { 'X-Gateway-Token': gatewayToken, 'Content-Type': 'application/json' },
+    headers: { 'X-Gateway-Token': gatewayToken, 'Content-Type': 'application/json', ...authHeader },
     body: JSON.stringify({
       byte_size: byteSize,
       checksum,
@@ -77,13 +91,14 @@ const makeSecondRequest = ({
   checksum,
   contentType,
   uri,
+  authHeader,
   File,
 }) => new Promise((resolve, reject) => {
   request({
     uri,
     method: 'put',
     body: File,
-    headers: { 'Content-Type': contentType, 'Content-MD5': checksum }
+    headers: { 'Content-Type': contentType, 'Content-MD5': checksum, ...authHeader }
   }, (error, response) => {
     const { statusCode, statusMessage } = response || {};
 
@@ -101,6 +116,7 @@ const makeThirdRequest = ({
   gatewayToken,
   metadata,
   restHost,
+  authHeader,
   signed_id,
   system,
   timestamp,
@@ -108,7 +124,7 @@ const makeThirdRequest = ({
   request({
     uri: new URL(MAJOR_TOM_DOWNLINK_API, restHost).href,
     method: 'post',
-    headers: { 'Content-Type': 'application/json', 'X-Gateway-Token': gatewayToken },
+    headers: { 'Content-Type': 'application/json', 'X-Gateway-Token': gatewayToken, ...authHeader },
     body: JSON.stringify({
       command_id: commandId || null,
       metadata: metadata || null,
@@ -142,9 +158,11 @@ const uploadDownlinkedFile = async ({
   metadata,
   restHost,
   gatewayToken,
+  basicAuth,
 }) => {
   const File = getFileFromAmbiguousArg(filePath);
   const byteSize = File.byteLength;
+  const authHeader = getBasicAuthHeaderObj(basicAuth);
 
   const checksum = await calculateChecksum(File);
   const firstResponse = await makeFirstRequest({
@@ -153,11 +171,12 @@ const uploadDownlinkedFile = async ({
     fileName,
     gatewayToken,
     restHost,
+    authHeader,
   });
   const { direct_upload = {}, signed_id } = firstResponse;
   const { url } = direct_upload;
 
-  await makeSecondRequest({ checksum, contentType, uri: url, File });
+  await makeSecondRequest({ checksum, contentType, uri: url, authHeader, File });
 
   return await makeThirdRequest({
     commandId,
@@ -165,6 +184,7 @@ const uploadDownlinkedFile = async ({
     gatewayToken,
     metadata,
     restHost,
+    authHeader,
     signed_id,
     system,
     timestamp: timestamp || Date.now(),

@@ -449,6 +449,7 @@ const newNodeGateway = ({
     resultStream,
     keepAlive,
     useSecure: !http,
+    basicAuth,
   });
 
   /**
@@ -474,6 +475,7 @@ const newNodeGateway = ({
     metadata,
     restHost,
     gatewayToken,
+    basicAuth,
   });
 
   /**
