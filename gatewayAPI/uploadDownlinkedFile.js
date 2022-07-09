@@ -161,7 +161,7 @@ const uploadDownlinkedFile = async ({
   basicAuth,
 }) => {
   const File = getFileFromAmbiguousArg(filePath);
-  const byteSize = File.byteLength;
+  const byteSize = File.length;
   const authHeader = getBasicAuthHeaderObj(basicAuth);
 
   const checksum = await calculateChecksum(File);
