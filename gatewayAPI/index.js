@@ -21,6 +21,7 @@ const { ONE_SECOND, ONE_MINUTE } = require('../constants');
  * @param {Function} param0.rateLimitCallback The function to call when a rate limit message is received from Major Tom
  * @param {Function} param0.cancelCallback The function to call when a cancel message is received from Major Tom
  * @param {Function} param0.transitCallback The function to call when a transit message is received from Major Tom
+ * @param {Function} param0.blobsFinishedCallback The function to call when a blob_data_finished message is received from Major Tom
  * @param {Boolean} param0.verbose True if this should log to console
  * @param {Function} param0.customLogger A custom logging function that an implementer can use
  */
@@ -38,6 +39,7 @@ const newNodeGateway = ({
   rateLimitCallback,
   cancelCallback,
   transitCallback,
+  blobsFinishedCallback,
   verbose,
   customLogger,
 }) => {
@@ -157,6 +159,18 @@ const newNodeGateway = ({
     }
   };
 
+  const blobFinishedHandler = message => {
+    const done = blobsFinishedCallback &&
+      typeof blobsFinishedCallback === 'function' &&
+      blobsFinishedCallback(message);
+
+    if (!done) {
+      eventBus.emit('blobsFinished', message);
+      if (!blobsFinishedCallback) log('No blob_data_finished callback implemented');
+      log('Received blobs finished message: ', message);
+    }
+  }
+
   const handleMessage = message => {
     const { type } = message;
 
@@ -201,6 +215,7 @@ const newNodeGateway = ({
     cancel: cancelHandler,
     transit: transitHandler,
     received_blob: blobHandler,
+    blob_data_finished: blobFinishedHandler,
   };
 
   /********** These are methods exposed to the library **********/
@@ -534,6 +549,7 @@ class NodeGateway {
     rateLimitCallback,
     cancelCallback,
     transitCallback,
+    blobsFinishedCallback,
     verbose,
     customLogger,
     altRestHost,
@@ -552,6 +568,7 @@ class NodeGateway {
       rateLimitCallback,
       cancelCallback,
       transitCallback,
+      blobsFinishedCallback,
       verbose,
       customLogger,
       blobCallback,
