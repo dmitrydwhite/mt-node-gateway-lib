@@ -1,6 +1,6 @@
 {
   "name": "majortom-gateway",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "NodeJS API for Major Tom",
   "main": "index.js",
   "scripts": {
