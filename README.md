@@ -35,6 +35,7 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
   - `[errorCallback]` `<Function>` The function to run when an error message is received from Major Tom.
   - `[rateLimitCallback]` `<Function>` The function to run when a rate limit message is received from Major Tom.
   - `[transitCallback]` `<Function>` The function to run when a transit message is received from Major Tom
+  - `[blobsFinishedCallback]` `<Function>` The function to run when a `blob_data_finished` type message is received from Major Tom.
   - `[sslVerify]` `<Object>` Used to establish secure socket layer
   - `[sslCaBundle]` `<Object>` Used to establish secure socket layer
   - `[verbose]` `<Boolean>` If true, will write the messages to `process.stdout`
@@ -42,7 +43,7 @@ const myGatewayConnection = new NodeGateway(...instantiationArgs);
 
 * Returns: `<NodeGatewayConnection>`
 
-### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, verbose, customLogger, blobCallback)`
+### `new NodeGateway(host, gatewayToken, sslVerify, basicAuth, http, sslCaBundle, commandCallback, errorCallback, rateLimitCallback, cancelCallback, transitCallback, blobsFinishedCallback, verbose, customLogger, blobCallback)`
 
 * Returns: `<NodeGatewayConnection>`
 
