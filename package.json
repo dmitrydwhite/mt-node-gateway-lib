@@ -15,10 +15,11 @@
     "Gateway",
     "API"
   ],
-  "author": "Dmitry White",
+  "author": "Dmitry White <dmitry.white@xplore.com>",
+  "repopsitory": "github:dmitrydwhite/mt-node-gateway-lib",
   "license": "MIT",
   "dependencies": {
-    "request": "^2.88.2",
+    "request": "2.88.2",
     "ws": "^7.3.0"
   }
 }
