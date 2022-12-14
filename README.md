@@ -83,6 +83,13 @@ If `message` is a String or a Buffer, `transmit` will assume that in its String 
 
 #### `connection.transmitEvents(event)`
 * `event` `<Object>` The event details; see Major Tom Gateway Docs for details of this object.
+  - `event.command_id` `<Number?>` The optional command related to this event
+  - `event.debug` `<Any?>` Debugging information to send to Major Tom
+  - `event.level` `String?` One of `"critical" "error" "warning" "nominal" "debug"`
+  - `event.message` `String?` A succinct message about the event
+  - `event.system` `String?` The name of the system related to the event
+  - `event.timestamp` `Number?` The unix timestamp in ms
+  - `event.type` `String?` A free-form event type that can be used to group similar events
 
 #### `connection.transmitMetrics(metrics)`
 * `metrics` `<Array>` The metrics to send to Major Tom; see Major Tom Gateway Docs for details of the objects in this Array.
